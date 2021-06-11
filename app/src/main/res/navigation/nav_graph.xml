@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/mainFragment">
+
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.citrus.digitalsignage.view.MainFragment"
+        android:label="fragment_main"
+        tools:layout="@layout/fragment_main" >
+        <action
+            android:id="@+id/action_mainFragment_to_b1Fragment"
+            app:destination="@id/b1Fragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_b2Fragment"
+            app:destination="@id/b2Fragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_b3Fragment"
+            app:destination="@id/b3Fragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_b4Fragment"
+            app:destination="@id/b4Fragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_b5Fragment"
+            app:destination="@id/b5Fragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/b1Fragment"
+        android:name="com.citrus.digitalsignage.view.B1Fragment"
+        android:label="fragment_b1"
+        tools:layout="@layout/fragment_b1" />
+    <fragment
+        android:id="@+id/b2Fragment"
+        android:name="com.citrus.digitalsignage.view.B2Fragment"
+        android:label="fragment_b2"
+        tools:layout="@layout/fragment_b2" />
+    <fragment
+        android:id="@+id/b3Fragment"
+        android:name="com.citrus.digitalsignage.view.B3Fragment"
+        android:label="fragment_b3"
+        tools:layout="@layout/fragment_b3" />
+    <fragment
+        android:id="@+id/b4Fragment"
+        android:name="com.citrus.digitalsignage.view.B4Fragment"
+        android:label="fragment_b4"
+        tools:layout="@layout/fragment_b4" />
+    <fragment
+        android:id="@+id/b5Fragment"
+        android:name="com.citrus.digitalsignage.view.B5Fragment"
+        android:label="fragment_b5"
+        tools:layout="@layout/fragment_b5" />
+</navigation>

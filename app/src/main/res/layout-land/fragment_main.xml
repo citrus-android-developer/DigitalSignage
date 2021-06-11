@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+
+
+    <com.google.android.material.textfield.TextInputLayout
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:id="@+id/serverIPTextInputLayout"
+        android:layout_margin="@dimen/dp_40"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Server IP"
+        app:boxStrokeWidth="@dimen/dp_2"
+        app:startIconDrawable="@drawable/ic_baseline_cast_connected_24"
+        app:boxCornerRadiusTopStart="@dimen/dp_5"
+        app:boxCornerRadiusTopEnd="@dimen/dp_5"
+        app:boxCornerRadiusBottomStart="@dimen/dp_5"
+        app:boxCornerRadiusBottomEnd="@dimen/dp_5">
+
+        <AutoCompleteTextView
+            android:id="@+id/serverIP"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:padding="@dimen/dp_5"
+            android:textSize="@dimen/sp_22"
+            android:textStyle="bold"
+            android:inputType="text"
+            android:imeOptions="actionNext"
+            android:singleLine="true"
+            />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        app:layout_constraintTop_toBottomOf="@+id/serverIPTextInputLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:id="@+id/storeIDTextInputLayout"
+        android:layout_margin="@dimen/dp_40"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="分店代號"
+        app:boxStrokeWidth="@dimen/dp_2"
+        app:startIconDrawable="@drawable/ic_baseline_store_24"
+        app:boxCornerRadiusTopStart="@dimen/dp_5"
+        app:boxCornerRadiusTopEnd="@dimen/dp_5"
+        app:boxCornerRadiusBottomStart="@dimen/dp_5"
+        app:boxCornerRadiusBottomEnd="@dimen/dp_5">
+
+        <AutoCompleteTextView
+            android:id="@+id/storeID"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:paddingTop="@dimen/dp_5"
+            android:paddingBottom="@dimen/dp_5"
+            android:textSize="@dimen/sp_22"
+            android:textStyle="bold"
+            android:inputType="text"
+            android:imeOptions="actionNext"
+            android:singleLine="true"
+            />
+    </com.google.android.material.textfield.TextInputLayout>
+
+
+
+
+    <com.google.android.material.textfield.TextInputLayout
+        app:layout_constraintTop_toBottomOf="@+id/storeIDTextInputLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:id="@+id/deviceIDTextInputLayout"
+        android:layout_margin="@dimen/dp_40"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="設備碼"
+        app:boxStrokeWidth="@dimen/dp_2"
+        app:startIconDrawable="@drawable/ic_baseline_desktop_mac_24"
+        app:boxCornerRadiusTopStart="@dimen/dp_5"
+        app:boxCornerRadiusTopEnd="@dimen/dp_5"
+        app:boxCornerRadiusBottomStart="@dimen/dp_5"
+        app:boxCornerRadiusBottomEnd="@dimen/dp_5">
+
+        <AutoCompleteTextView
+            android:id="@+id/deviceID"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:paddingTop="@dimen/dp_5"
+            android:paddingBottom="@dimen/dp_5"
+            android:textSize="@dimen/sp_22"
+            android:textStyle="bold"
+            android:inputType="text"
+            android:imeOptions="actionDone"
+            android:singleLine="true"
+            />
+    </com.google.android.material.textfield.TextInputLayout>
+
+
+
+    <Button
+        android:id="@+id/btnOK"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_yellow_45"
+        android:elevation="@dimen/dp_5"
+        android:paddingStart="@dimen/dp_40"
+        android:paddingTop="@dimen/dp_10"
+        android:paddingEnd="@dimen/dp_40"
+        android:paddingBottom="@dimen/dp_10"
+        android:stateListAnimator="@animator/selector_animator"
+        android:text="OK"
+        android:textSize="@dimen/sp_22"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="@dimen/dp_20"
+        />
+
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:visibility="gone"
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/black"
+        app:fabCustomSize="@dimen/dp_80"
+        android:src="@drawable/ic_baseline_check_24"
+        android:scaleType="centerCrop"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:elevation="@dimen/dp_5"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/white" />
+
+    <View
+        android:id="@+id/circle"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="@drawable/circle"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/fab"
+        app:layout_constraintEnd_toEndOf="@+id/fab"
+        app:layout_constraintStart_toStartOf="@+id/fab"
+        app:layout_constraintTop_toTopOf="@+id/fab" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/apkDownLoad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_margin="@dimen/dp_20"
+        app:srcCompat="@drawable/ic_baseline_cloud_download_24"
+         />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
