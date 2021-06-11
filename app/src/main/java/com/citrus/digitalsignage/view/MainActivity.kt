@@ -1,20 +1,28 @@
 package com.citrus.digitalsignage.view
 
+import android.Manifest
 import android.app.Activity
 import android.app.Dialog
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
-import android.util.Log
+import android.provider.Settings
+import android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -41,6 +49,10 @@ class MainActivity : AppCompatActivity() {
     private var currentApiVersion: Int = 0
     private val sharedViewModel: SharedViewModel by viewModels()
 
+    private var storagePermissionGranted = false
+    private var installPermissionGranted = false
+    private lateinit var permissionsLauncher: ActivityResultLauncher<Array<String>>
+
 
     override fun onResume() {
         super.onResume()
@@ -62,6 +74,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -71,10 +84,26 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.findFragmentById(R.id.fragment) as NavHostFragment?
         navController = navHostFragment!!.navController
 
+        permissionsLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                storagePermissionGranted =
+                    permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE] ?: storagePermissionGranted
+                installPermissionGranted =
+                    permissions[Manifest.permission.REQUEST_INSTALL_PACKAGES] ?: installPermissionGranted
+
+                if(!installPermissionGranted){
+                    startInstallPermissionSettingActivity()
+                    return@registerForActivityResult
+                }
+
+                if (storagePermissionGranted) {
+                    sharedViewModel.intentUpdate()
+                }
+            }
+
 
 
         sharedViewModel.layoutID.observe(this,{
-            Log.e("trigger",it.name)
             when(it){
                 LayoutID.A01 -> {
                     navigateToTarget(R.id.b1Fragment)
@@ -95,7 +124,9 @@ class MainActivity : AppCompatActivity() {
         })
 
         sharedViewModel.triggerUpdate.observe(this,{
-            updateDialog()
+            if(isPermissionGranted()){
+                updateDialog()
+            }
         })
 
 
@@ -243,5 +274,59 @@ class MainActivity : AppCompatActivity() {
             .hideConfirmButton()
             .show()
         btnSubmit.setOnClickListener { sweetAlertDialog.dismissWithAnimation() }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun isPermissionGranted(): Boolean {
+        val hasStoragePermission = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val hasInstallPermission = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.REQUEST_INSTALL_PACKAGES
+        ) == PackageManager.PERMISSION_GRANTED
+
+        storagePermissionGranted = hasStoragePermission
+        installPermissionGranted = hasInstallPermission
+
+        val permissionsToRequest = mutableListOf<String>()
+        if (!storagePermissionGranted) {
+            permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
+
+        return if (permissionsToRequest.isNotEmpty()) {
+            permissionsLauncher.launch(permissionsToRequest.toTypedArray())
+            false
+        } else {
+            true
+        }
+    }
+
+
+    fun setInstallPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val hasInstallPermission: Boolean =
+                this.packageManager.canRequestPackageInstalls()
+            if (!hasInstallPermission) {
+                startInstallPermissionSettingActivity()
+                return
+            }
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private fun startInstallPermissionSettingActivity() {
+        val packageURI: Uri = Uri.parse("package:$packageName")
+        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, packageURI)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivityForResult(intent, 888)
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == RESULT_OK && requestCode == 888) {
+            Toast.makeText(this, "安裝應用", Toast.LENGTH_SHORT).show()
+        }
     }
 }
