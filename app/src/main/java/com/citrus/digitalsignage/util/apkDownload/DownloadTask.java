@@ -49,7 +49,7 @@ public class DownloadTask extends AsyncTask {
             // download the file
             input = connection.getInputStream();
             output = new FileOutputStream(
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/digitalSignage.apk");
+                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString() + "/digitalSignage.apk");
 //            output = new FileOutputStream("/sdcard/mOrange.apk");
 
             byte[] data = new byte[4096];

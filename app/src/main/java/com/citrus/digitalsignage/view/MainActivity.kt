@@ -230,9 +230,11 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "下載成功", Toast.LENGTH_SHORT)
                     .show()
-                val path =
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                val file = File(path, "digitalSignage.apk")
+//                val path =
+//                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+//                val file = File(path, "digitalSignage.apk")
+
+                var file = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),"digitalSignage.apk")
                 val apkUri = FileProvider.getUriForFile(
                     this@MainActivity,
                     BuildConfig.APPLICATION_ID + ".provider",

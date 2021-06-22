@@ -1,5 +1,6 @@
 package com.citrus.digitalsignage.viewmodel
 
+import android.util.Log
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -12,11 +13,8 @@ import com.citrus.digitalsignage.model.vo.Layout
 import com.citrus.digitalsignage.model.vo.SendRequest
 import com.citrus.digitalsignage.util.Constants
 import com.citrus.digitalsignage.util.SingleLiveEvent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 import java.util.*
 
 
@@ -46,6 +44,8 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
     lateinit var job: Job
     private fun isJobInit() = ::job.isInitialized
 
+    private var timerJob: Job? = null
+
     /**暫存上一次撈取的資料*/
     lateinit var preLayout: Layout
     private fun isLayoutInit() = ::preLayout.isInitialized
@@ -59,6 +59,11 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
     private val _triggerUpdate = SingleLiveEvent<Boolean>()
     val triggerUpdate: SingleLiveEvent<Boolean>
         get() = _triggerUpdate
+
+    /**錯誤通知*/
+    private val _error = SingleLiveEvent<Boolean>()
+    val error: SingleLiveEvent<Boolean>
+        get() = _error
 
     /**p1~p4對應版面裡的區塊位置*/
     private val _p1 = MutableLiveData<BlockStatus>()
@@ -96,7 +101,10 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
         viewModelScope.launch {
             model.getLayoutData(
                 prefs.serverIP + Constants.GET_ALL_DATA,
-                SendRequest(prefs.deviceID, prefs.storeID)
+                SendRequest(prefs.deviceID, prefs.storeID),
+                onError = {
+                    _error.postValue(true)
+                }
             ).collect { layout ->
 
                 preLayout = when(fetchDataType(layout)){

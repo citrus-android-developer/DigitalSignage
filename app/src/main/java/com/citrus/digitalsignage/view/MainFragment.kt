@@ -1,6 +1,7 @@
 package com.citrus.digitalsignage.view
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.Editable
@@ -30,6 +31,21 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentMainBinding.bind(view)
         initView()
+        initObserver()
+    }
+
+    private fun initObserver() {
+        sharedViewModel.error.observe(viewLifecycleOwner,{
+            AlertDialog.Builder(requireContext())
+                .setTitle("Error")
+                .setMessage("查無結果，請確認輸入資訊是否正確")
+                .setPositiveButton("OK"){ _,_ ->
+
+                }
+                .create()
+                .show()
+        })
+
     }
 
     private fun initView() {
@@ -58,6 +74,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             }
         }
     }
+
+
 
     private fun loadPrefsInfo() {
         binding.serverIP?.setText(prefs.serverIP,false)
