@@ -15,6 +15,7 @@ import com.citrus.digitalsignage.util.Constants
 import com.citrus.digitalsignage.util.SingleLiveEvent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onStart
 import java.util.*
 
 
@@ -37,12 +38,15 @@ enum class LayoutID {
 }
 
 
-
 class SharedViewModel @ViewModelInject constructor(private val model: Repository) : ViewModel() {
 
     /**排程任務*/
     lateinit var job: Job
     private fun isJobInit() = ::job.isInitialized
+
+    /**回到設定頁時值設成1，修正版面無變更時回到設定頁再點選ok，
+     * 會因為ReFetchAndNotChange導致無法進入頁面的問題*/
+    var isBackSetting = 0
 
     private var timerJob: Job? = null
 
@@ -54,6 +58,10 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
     private val _layoutID = SingleLiveEvent<LayoutID>()
     val layoutID: SingleLiveEvent<LayoutID>
         get() = _layoutID
+
+    private val _isLoading = SingleLiveEvent<Boolean>()
+    val isLoading: SingleLiveEvent<Boolean>
+        get() = _isLoading
 
     /**更版用*/
     private val _triggerUpdate = SingleLiveEvent<Boolean>()
@@ -105,46 +113,52 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
                 onError = {
                     _error.postValue(true)
                 }
-            ).collect { layout ->
+            ).onStart {
+                _isLoading.postValue(true)
+            }.collect { layout ->
+                    Log.e("fetchDataType", fetchDataType(layout).toString())
 
-                preLayout = when(fetchDataType(layout)){
-                    is FetchStatus.FirstTime -> {
-                        layout
+                    preLayout = when (fetchDataType(layout)) {
+                        is FetchStatus.FirstTime -> {
+                            layout
+                        }
+
+                        is FetchStatus.ReFetchAndNotChange -> {
+                            return@collect
+                        }
+
+                        is FetchStatus.ReFetchAndNeedChange -> {
+                            layout
+                        }
                     }
 
-                    is FetchStatus.ReFetchAndNotChange -> {
-                        return@collect
-                    }
+                    defineBlockStyle(preLayout)
 
-                    is FetchStatus.ReFetchAndNeedChange -> {
-                        layout
+                    /**初次執行未init則啟動排程*/
+                    if (!isJobInit()) {
+                        startTimer()
                     }
                 }
 
-                defineBlockStyle(preLayout)
-
-                /**初次執行未init則啟動排程*/
-                if (!isJobInit()) {
-                    startTimer()
-                }
-            }
+            isBackSetting = 0
         }
 
 
     /**當前fetch狀態分析*/
-    private fun fetchDataType(layout: Layout):FetchStatus{
-        if(!isLayoutInit()){
+    private fun fetchDataType(layout: Layout): FetchStatus {
+        if (!isLayoutInit()) {
+            /**初次開啟APP*/
             return FetchStatus.FirstTime
         }
 
-        return if(layout == preLayout){
+        return if (layout == preLayout && isBackSetting == 0) {
+            /**資料源與前一筆一樣、並且不是從設定頁發送的fetchData請求時*/
             FetchStatus.ReFetchAndNotChange
-        }else{
+        } else {
+            /**資料源與前一筆不一樣、或是從設定頁發送的fetchData請求時*/
             FetchStatus.ReFetchAndNeedChange
         }
     }
-
-
 
 
     /**輪播所需圖片url拆解*/

@@ -31,6 +31,7 @@ import androidx.navigation.navOptions
 import cn.pedant.SweetAlert.SweetAlertDialog
 import com.citrus.digitalsignage.BuildConfig
 import com.citrus.digitalsignage.R
+import com.citrus.digitalsignage.databinding.ActivityMainBinding
 import com.citrus.digitalsignage.di.MyApplication
 import com.citrus.digitalsignage.util.apkDownload.DownloadTask
 import com.citrus.digitalsignage.viewmodel.LayoutID
@@ -46,6 +47,7 @@ enum class BackStackTrace {
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
     private var currentApiVersion: Int = 0
     private val sharedViewModel: SharedViewModel by viewModels()
 
@@ -77,7 +79,9 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
 
         val navController: NavController
         val navHostFragment =
@@ -104,6 +108,7 @@ class MainActivity : AppCompatActivity() {
 
 
         sharedViewModel.layoutID.observe(this,{
+            binding.progressBar.visibility = View.GONE
             when(it){
                 LayoutID.A01 -> {
                     navigateToTarget(R.id.b1Fragment)
@@ -121,6 +126,10 @@ class MainActivity : AppCompatActivity() {
                     navigateToTarget(R.id.b5Fragment)
                 }
             }
+        })
+
+        sharedViewModel.isLoading.observe(this,{
+            binding.progressBar.visibility = View.VISIBLE
         })
 
         sharedViewModel.triggerUpdate.observe(this,{

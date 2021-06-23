@@ -60,6 +60,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 val deviceID = deviceID?.text!!.trimStr()
 
                 if(inputCheck(serverIP,storeID,deviceID)){
+                    sharedViewModel.isBackSetting = 1
                     prefs.serverIP = serverIP
                     prefs.storeID = storeID
                     prefs.deviceID = deviceID

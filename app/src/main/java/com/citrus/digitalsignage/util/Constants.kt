@@ -14,7 +14,7 @@ object Constants {
     const val NOTIFICATION_CHANNEL_NAME = "Tracking"
     const val NOTIFICATION_ID = 1
 
-    const val GET_ALL_DATA = "/POS/digisinageWS/Service1.asmx/GetLayoutData"
+    const val GET_ALL_DATA = "/POS/digisinageWS/Service1.asmx/SetRegistered"
     const val IMG_DOMAIN ="http://cms.citrus.tw/demo/SIGINAGE/Assets/Upload/"
 
     const val KEY_SERVER_IP = "KEY_SERVER_IP"

@@ -15,12 +15,13 @@
         android:name=".di.MyApplication"
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ad"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ad"
         android:supportsRtl="true"
         android:theme="@style/Theme.DigitalSignage">
-        <activity android:name=".view.MainActivity" android:launchMode="singleTask">
+        <activity android:name=".view.MainActivity"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

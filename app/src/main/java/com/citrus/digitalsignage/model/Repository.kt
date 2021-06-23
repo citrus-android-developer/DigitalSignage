@@ -2,12 +2,11 @@ package com.citrus.digitalsignage.model
 
 
 import android.util.Log
+import androidx.datastore.dataStore
 import com.citrus.digitalsignage.model.api.ApiService
 import com.citrus.digitalsignage.model.vo.SendRequest
 import com.google.gson.Gson
-import com.skydoves.sandwich.suspendOnError
-import com.skydoves.sandwich.suspendOnException
-import com.skydoves.sandwich.suspendOnSuccess
+import com.skydoves.sandwich.*
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
@@ -31,11 +30,9 @@ class Repository @Inject constructor(private val apiService: ApiService) {
                        onError()
                    }
                 }
-            }.suspendOnError {
-                Log.e("OnError","OnError")
-                onError()
-            }.suspendOnException {
-                Log.e("OnException","OnException")
+            }.suspendOnError(ErrorEnvelopeMapper) {
+                val message = this.message
+                Log.e("onError",message)
                 onError()
             }
     }.flowOn(Dispatchers.IO)
@@ -43,3 +40,18 @@ class Repository @Inject constructor(private val apiService: ApiService) {
 
 
 }
+
+data class ErrorEnvelope(
+    val code: Int,
+    val message: String
+)
+
+
+object ErrorEnvelopeMapper : ApiErrorModelMapper<ErrorEnvelope> {
+
+    override fun map(apiErrorResponse: ApiResponse.Failure.Error<*>): ErrorEnvelope {
+        return ErrorEnvelope(apiErrorResponse.statusCode.code, apiErrorResponse.message())
+    }
+}
+
+
