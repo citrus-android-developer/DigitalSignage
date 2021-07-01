@@ -39,9 +39,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             AlertDialog.Builder(requireContext())
                 .setTitle("Error")
                 .setMessage("查無結果，請確認輸入資訊是否正確")
-                .setPositiveButton("OK"){ _,_ ->
-
-                }
+                .setPositiveButton("OK"){ _,_ -> }
                 .create()
                 .show()
         })
@@ -71,7 +69,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
 
             apkDownLoad?.setOnClickListener {
-                sharedViewModel.intentUpdate()
+                sharedViewModel.intentToUpdate()
             }
         }
     }

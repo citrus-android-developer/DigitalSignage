@@ -2,6 +2,7 @@ package com.citrus.digitalsignage.view
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.Dialog
 import android.app.ProgressDialog
 import android.content.Context
@@ -13,7 +14,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
-import android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
@@ -33,11 +33,12 @@ import com.citrus.digitalsignage.BuildConfig
 import com.citrus.digitalsignage.R
 import com.citrus.digitalsignage.databinding.ActivityMainBinding
 import com.citrus.digitalsignage.di.MyApplication
-import com.citrus.digitalsignage.util.apkDownload.DownloadTask
+import com.citrus.digitalsignage.viewmodel.DownloadStatus
 import com.citrus.digitalsignage.viewmodel.LayoutID
 import com.citrus.digitalsignage.viewmodel.SharedViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import java.io.FileOutputStream
 import java.util.*
 
 
@@ -54,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     private var storagePermissionGranted = false
     private var installPermissionGranted = false
     private lateinit var permissionsLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var mProgressDialog: ProgressDialog
 
 
     override fun onResume() {
@@ -91,25 +93,40 @@ class MainActivity : AppCompatActivity() {
         permissionsLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
                 storagePermissionGranted =
-                    permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE] ?: storagePermissionGranted
+                    permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE]
+                        ?: storagePermissionGranted
                 installPermissionGranted =
-                    permissions[Manifest.permission.REQUEST_INSTALL_PACKAGES] ?: installPermissionGranted
+                    permissions[Manifest.permission.REQUEST_INSTALL_PACKAGES]
+                        ?: installPermissionGranted
 
-                if(!installPermissionGranted){
+                if (!installPermissionGranted) {
                     startInstallPermissionSettingActivity()
                     return@registerForActivityResult
                 }
 
                 if (storagePermissionGranted) {
-                    sharedViewModel.intentUpdate()
+                    updateDialog()
                 }
             }
 
 
+        mProgressDialog = ProgressDialog(this@MainActivity)
+        mProgressDialog.setMessage("正在下載更新")
+        mProgressDialog.isIndeterminate = true
+        mProgressDialog.max = 100
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+        mProgressDialog.setCancelable(false)
+        mProgressDialog.setButton(
+            Dialog.BUTTON_NEGATIVE,
+            "取消"
+        ) { _: DialogInterface?, _: Int ->
+            sharedViewModel.cancelUpdateJob()
+        }
 
-        sharedViewModel.layoutID.observe(this,{
+
+        sharedViewModel.layoutID.observe(this, {
             binding.progressBar.visibility = View.GONE
-            when(it){
+            when (it) {
                 LayoutID.A01 -> {
                     navigateToTarget(R.id.b1Fragment)
                 }
@@ -125,16 +142,51 @@ class MainActivity : AppCompatActivity() {
                 LayoutID.A05 -> {
                     navigateToTarget(R.id.b5Fragment)
                 }
+                LayoutID.Err -> {
+                    AlertDialog.Builder(this)
+                        .setTitle("Error")
+                        .setMessage("未定義的版面設定")
+                        .setPositiveButton("OK") { _, _ ->
+
+                        }
+                        .create()
+                        .show()
+                }
             }
         })
 
-        sharedViewModel.isLoading.observe(this,{
+        sharedViewModel.isLoading.observe(this, {
             binding.progressBar.visibility = View.VISIBLE
         })
 
-        sharedViewModel.triggerUpdate.observe(this,{
-            if(isPermissionGranted()){
+        sharedViewModel.triggerUpdate.observe(this, {
+            if (isPermissionGranted()) {
                 updateDialog()
+            }
+        })
+
+        sharedViewModel.downloadStatus.observe(this, {
+            when (it) {
+                is DownloadStatus.Success -> {
+                    mProgressDialog.dismiss()
+
+                    val apkUri = FileProvider.getUriForFile(
+                        this@MainActivity,
+                        BuildConfig.APPLICATION_ID + ".provider",
+                        getFile()
+                    )
+                    val install = Intent(Intent.ACTION_INSTALL_PACKAGE)
+                    install.data = apkUri
+                    install.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    startActivity(install)
+                }
+                is DownloadStatus.Error -> {
+                    showAlertDialog(this, "發生錯誤", it.message)
+                }
+                is DownloadStatus.Progress -> {
+                    mProgressDialog.isIndeterminate = false
+                    mProgressDialog.progress = it.progress
+                }
             }
         })
 
@@ -223,47 +275,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun downloadApk(name: String) {
-
-        // instantiate it within the onCreate method
-        val mProgressDialog = ProgressDialog(this@MainActivity)
-        mProgressDialog.setMessage("正在下載更新")
-        mProgressDialog.isIndeterminate = true
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-        mProgressDialog.setCancelable(false)
-
-
-        // execute this when the downloader must be fired
-        val downloadTask = DownloadTask(this@MainActivity, mProgressDialog) { o ->
-            if (o != null) {
-                showAlertDialog(this, "發生錯誤", o.toString())
-            } else {
-                Toast.makeText(this, "下載成功", Toast.LENGTH_SHORT)
-                    .show()
-//                val path =
-//                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-//                val file = File(path, "digitalSignage.apk")
-
-                var file = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),"digitalSignage.apk")
-                val apkUri = FileProvider.getUriForFile(
-                    this@MainActivity,
-                    BuildConfig.APPLICATION_ID + ".provider",
-                    file
-                )
-                val install = Intent(Intent.ACTION_INSTALL_PACKAGE)
-                install.data = apkUri
-                install.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                startActivity(install)
-            }
-        }
-        mProgressDialog.setButton(
-            Dialog.BUTTON_NEGATIVE,
-            "取消"
-        ) { _: DialogInterface?, _: Int ->
-            downloadTask.cancel(
-                true
-            )
-        }
-        downloadTask.execute("http://hq.citrus.tw/apk/digitalSignage_signed_v$name.apk")
+        sharedViewModel.intentUpdate(
+            getFile(),
+            "http://hq.citrus.tw/apk/digitalSignage_signed_v$name.apk"
+        )
+        mProgressDialog.show()
     }
 
     private fun showAlertDialog(context: Context?, title: String?, message: String) {
@@ -338,6 +354,21 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK && requestCode == 888) {
             Toast.makeText(this, "安裝應用", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    private fun getFile(): File {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            File(
+                getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                "digitalSignage.apk"
+            )
+        } else {
+            File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                "digitalSignage.apk"
+            )
         }
     }
 }
