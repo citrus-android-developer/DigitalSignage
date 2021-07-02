@@ -12,8 +12,9 @@ import com.citrus.digitalsignage.model.vo.DataBean
 import com.citrus.digitalsignage.model.vo.Layout
 import com.citrus.digitalsignage.model.vo.SendRequest
 import com.citrus.digitalsignage.util.Constants
-import com.citrus.digitalsignage.util.Constants.downloadFile
+import com.citrus.digitalsignage.util.DownloadStatus
 import com.citrus.digitalsignage.util.SingleLiveEvent
+import com.citrus.digitalsignage.util.downloadFile
 import io.ktor.client.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
@@ -32,11 +33,6 @@ sealed class FetchStatus {
     object ReFetchAndNeedChange : FetchStatus()
 }
 
-sealed class DownloadStatus {
-    object Success : DownloadStatus()
-    data class Error(val message: String) : DownloadStatus()
-    data class Progress(val progress: Int): DownloadStatus()
-}
 
 enum class ShowType {
     VIDEO, IMG, BANNER, URL
@@ -58,7 +54,6 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
     var isBackSetting = 0
 
 
-
     /**暫存上一次撈取的資料*/
     lateinit var preLayout: Layout
     private fun isLayoutInit() = ::preLayout.isInitialized
@@ -73,6 +68,7 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
         get() = _isLoading
 
     /**更版用*/
+    private var updateJob: Job? = null
     private val _triggerUpdate = SingleLiveEvent<Boolean>()
     val triggerUpdate: SingleLiveEvent<Boolean>
         get() = _triggerUpdate
@@ -125,29 +121,29 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
                 prefs.serverIP + Constants.GET_ALL_DATA,
                 SendRequest(prefs.deviceID, prefs.storeID),
                 onError = {
-                    Log.e("err msg",it)
+                    Log.e("err msg", it)
                     _error.postValue(true)
                 }
             ).onStart {
                 _isLoading.postValue(true)
             }.collect { layout ->
-                    preLayout = when (fetchDataType(layout)) {
-                        is FetchStatus.FirstTime -> {
-                            layout
-                        }
-                        is FetchStatus.ReFetchAndNotChange -> {
-                            return@collect
-                        }
-                        is FetchStatus.ReFetchAndNeedChange -> {
-                            layout
-                        }
+                preLayout = when (fetchDataType(layout)) {
+                    is FetchStatus.FirstTime -> {
+                        layout
                     }
-                    defineBlockStyle(preLayout)
-                    /**初次執行未init則啟動排程*/
-                    if (!isJobInit()) {
-                        startTimer()
+                    is FetchStatus.ReFetchAndNotChange -> {
+                        return@collect
+                    }
+                    is FetchStatus.ReFetchAndNeedChange -> {
+                        layout
                     }
                 }
+                defineBlockStyle(preLayout)
+                /**初次執行未init則啟動排程*/
+                if (!isJobInit()) {
+                    startTimer()
+                }
+            }
             isBackSetting = 0
         }
 
@@ -253,10 +249,8 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
     }
 
 
-    private var updateJob: Job? = null
-
     /**更版*/
-    fun intentUpdate(file: File, url:String) {
+    fun intentUpdate(file: File, url: String) {
         updateJob = CoroutineScope(Dispatchers.IO).launch {
             HttpClient().downloadFile(file, url).collect {
                 withContext(Dispatchers.Main) {
@@ -266,8 +260,9 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
         }
     }
 
-    fun cancelUpdateJob(){
-        if(updateJob != null){
+    /**取消*/
+    fun cancelUpdateJob() {
+        if (updateJob != null) {
             updateJob!!.cancel()
         }
     }

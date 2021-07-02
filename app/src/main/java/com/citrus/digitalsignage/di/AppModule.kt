@@ -2,6 +2,7 @@ package com.citrus.digitalsignage.di
 
 
 import android.app.PendingIntent
+import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
@@ -54,6 +55,13 @@ object AppModule {
     @Singleton
     fun provideApiService(retrofit: Retrofit): ApiService =
             retrofit.create(ApiService::class.java)
+
+    @Singleton
+    @Provides
+    fun provideApplicationContext(
+        @ApplicationContext context: Context
+    ) = context
+
 
 
     @Provides

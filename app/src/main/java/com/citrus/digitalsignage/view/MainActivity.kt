@@ -26,19 +26,17 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.navOptions
 import cn.pedant.SweetAlert.SweetAlertDialog
 import com.citrus.digitalsignage.BuildConfig
 import com.citrus.digitalsignage.R
 import com.citrus.digitalsignage.databinding.ActivityMainBinding
-import com.citrus.digitalsignage.di.MyApplication
-import com.citrus.digitalsignage.viewmodel.DownloadStatus
+import com.citrus.digitalsignage.util.Constants
+import com.citrus.digitalsignage.util.DownloadStatus
 import com.citrus.digitalsignage.viewmodel.LayoutID
 import com.citrus.digitalsignage.viewmodel.SharedViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
-import java.io.FileOutputStream
 import java.util.*
 
 
@@ -74,7 +72,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        MyApplication().setCurrentPage(this)
     }
 
 
@@ -84,11 +81,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
-        val navController: NavController
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.fragment) as NavHostFragment?
-        navController = navHostFragment!!.navController
 
         permissionsLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -109,19 +101,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+        initProgressDialog()
 
-        mProgressDialog = ProgressDialog(this@MainActivity)
-        mProgressDialog.setMessage("正在下載更新")
-        mProgressDialog.isIndeterminate = true
-        mProgressDialog.max = 100
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-        mProgressDialog.setCancelable(false)
-        mProgressDialog.setButton(
-            Dialog.BUTTON_NEGATIVE,
-            "取消"
-        ) { _: DialogInterface?, _: Int ->
-            sharedViewModel.cancelUpdateJob()
-        }
 
 
         sharedViewModel.layoutID.observe(this, {
@@ -165,8 +146,8 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        sharedViewModel.downloadStatus.observe(this, {
-            when (it) {
+        sharedViewModel.downloadStatus.observe(this, { event ->
+            when (event) {
                 is DownloadStatus.Success -> {
                     mProgressDialog.dismiss()
 
@@ -181,16 +162,32 @@ class MainActivity : AppCompatActivity() {
                     startActivity(install)
                 }
                 is DownloadStatus.Error -> {
-                    showAlertDialog(this, "發生錯誤", it.message)
+                    mProgressDialog.dismiss()
+                    showAlertDialog(this, "發生錯誤", event.message)
                 }
                 is DownloadStatus.Progress -> {
                     mProgressDialog.isIndeterminate = false
-                    mProgressDialog.progress = it.progress
+                    mProgressDialog.progress = event.progress
                 }
             }
         })
 
 
+    }
+
+    private fun initProgressDialog() {
+        mProgressDialog = ProgressDialog(this)
+        mProgressDialog.setMessage("正在下載更新")
+        mProgressDialog.isIndeterminate = true
+        mProgressDialog.max = 100
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+        mProgressDialog.setCancelable(false)
+        mProgressDialog.setButton(
+            Dialog.BUTTON_NEGATIVE,
+            "取消"
+        ) { _: DialogInterface?, _: Int ->
+            sharedViewModel.cancelUpdateJob()
+        }
     }
 
     private fun navigateToTarget(id: Int) {
@@ -275,10 +272,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun downloadApk(name: String) {
-        sharedViewModel.intentUpdate(
-            getFile(),
-            "http://hq.citrus.tw/apk/digitalSignage_signed_v$name.apk"
-        )
+        sharedViewModel.intentUpdate(getFile(),
+            Constants.DOWNLOAD_URL + "digitalSignage_signed_v$name.apk")
         mProgressDialog.show()
     }
 
