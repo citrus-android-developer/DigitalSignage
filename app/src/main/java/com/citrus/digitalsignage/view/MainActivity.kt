@@ -80,7 +80,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        initProgressDialog()
 
         permissionsLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -100,10 +100,6 @@ class MainActivity : AppCompatActivity() {
                     updateDialog()
                 }
             }
-
-        initProgressDialog()
-
-
 
         sharedViewModel.layoutID.observe(this, {
             binding.progressBar.visibility = View.GONE

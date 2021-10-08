@@ -1,7 +1,6 @@
 package com.citrus.digitalsignage.viewmodel
 
 import android.util.Log
-import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -15,12 +14,14 @@ import com.citrus.digitalsignage.util.Constants
 import com.citrus.digitalsignage.util.DownloadStatus
 import com.citrus.digitalsignage.util.SingleLiveEvent
 import com.citrus.digitalsignage.util.downloadFile
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onStart
 import java.io.File
 import java.util.*
+import javax.inject.Inject
 
 
 sealed class BlockStatus {
@@ -43,10 +44,11 @@ enum class LayoutID {
 }
 
 
-class SharedViewModel @ViewModelInject constructor(private val model: Repository) : ViewModel() {
+@HiltViewModel
+class SharedViewModel @Inject constructor(private val model: Repository) : ViewModel() {
 
     /**排程任務*/
-    lateinit var job: Job
+    private lateinit var job: Job
     private fun isJobInit() = ::job.isInitialized
 
     /**回到設定頁時值設成1，修正版面無變更時回到設定頁再點選ok，
@@ -121,7 +123,6 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
                 prefs.serverIP + Constants.GET_ALL_DATA,
                 SendRequest(prefs.deviceID, prefs.storeID),
                 onError = {
-                    Log.e("err msg", it)
                     _error.postValue(true)
                 }
             ).onStart {
@@ -251,7 +252,7 @@ class SharedViewModel @ViewModelInject constructor(private val model: Repository
 
     /**更版*/
     fun intentUpdate(file: File, url: String) {
-        updateJob = CoroutineScope(Dispatchers.IO).launch {
+        updateJob = viewModelScope.launch {
             HttpClient().downloadFile(file, url).collect {
                 withContext(Dispatchers.Main) {
                     _downloadStatus.postValue(it)

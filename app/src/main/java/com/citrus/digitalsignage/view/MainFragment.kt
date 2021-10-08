@@ -43,7 +43,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 .create()
                 .show()
         })
-
     }
 
     private fun initView() {

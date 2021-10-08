@@ -98,6 +98,8 @@ abstract class BaseFragment<VB : ViewBinding>(private val inflate: Inflate<VB>) 
                 holder.imageView.scaleType = ImageView.ScaleType.FIT_XY
                 var url = data.imageUrl!!.replace("\r\n","")
 
+                Log.e("url",url)
+
                 Glide.with(holder.itemView)
                     .load(url.replace("\n",""))
                     .into(holder.imageView)
@@ -139,6 +141,7 @@ abstract class BaseFragment<VB : ViewBinding>(private val inflate: Inflate<VB>) 
                 }
             }
         })
+
         videoList.add(youTubeView)
     }
 

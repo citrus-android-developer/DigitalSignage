@@ -51,4 +51,10 @@
         android:name="com.citrus.digitalsignage.view.B5Fragment"
         android:label="fragment_b5"
         tools:layout="@layout/fragment_b5" />
+
+    <fragment
+        android:id="@+id/testFragment"
+        android:name="com.citrus.digitalsignage.TestFragment"
+        android:label="fragment_test"
+        tools:layout="@layout/fragment_test" />
 </navigation>
